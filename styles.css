@@ -368,6 +368,17 @@ h1 {
     gap: var(--spacing-md);
 }
 
+.lab-item-link {
+    text-decoration: none;
+    display: block;
+}
+
+.lab-item-link:hover .lab-item {
+    border-color: var(--accent-orange);
+    transform: translateY(-4px);
+    box-shadow: 0 0 30px rgba(255, 107, 53, 0.15);
+}
+
 .lab-item {
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
