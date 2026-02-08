@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRANSFORMABLES — THEIA Lab</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #111111;
+            --bg-tertiary: #1a1a1a;
+            --text-primary: #f0f0f0;
+            --text-secondary: #888888;
+            --text-muted: #555555;
+            --accent-orange: #ff6b35;
+            --accent-cyan: #00d4ff;
+            --accent-purple: #9d4edd;
+            --border-color: #333333;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-mono);
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        .noise {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 60px;
+        }
+
+        .back-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            transition: color 0.3s;
+        }
+
+        .back-link:hover {
+            color: var(--accent-orange);
+        }
+
+        .lab-badge {
+            font-size: 0.75rem;
+            color: var(--accent-purple);
+            letter-spacing: 0.2em;
+        }
+
+        /* Hero */
+        .hero {
+            min-height: 60vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding-top: 100px;
+            padding-bottom: 2rem;
+            position: relative;
+            text-align: center;
+        }
+
+        .hero-badge {
+            font-size: 0.75rem;
+            color: var(--accent-purple);
+            letter-spacing: 0.3em;
+            margin-bottom: 1rem;
+        }
+
+        .hero h1 {
+            font-size: clamp(2rem, 6vw, 3.5rem);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-subtitle {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        /* Generator Section */
+        .generator {
+            padding: 2rem 0 4rem;
+        }
+
+        .generator-card {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            padding: 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .generator-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-orange), var(--accent-purple), var(--accent-cyan));
+        }
+
+        .concept-display {
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .concept-name {
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            font-weight: 800;
+            color: var(--accent-orange);
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .concept-tagline {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            font-style: italic;
+            margin-bottom: 2rem;
+        }
+
+        .concept-description {
+            color: var(--text-secondary);
+            line-height: 1.8;
+            font-size: 1rem;
+        }
+
+        .concept-specs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .spec-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .spec-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            letter-spacing: 0.1em;
+            margin-bottom: 0.25rem;
+        }
+
+        .spec-value {
+            font-size: 0.875rem;
+            color: var(--accent-cyan);
+        }
+
+        .generate-btn {
+            background: transparent;
+            border: 2px solid var(--accent-orange);
+            color: var(--accent-orange);
+            font-family: var(--font-mono);
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 1rem 3rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .generate-btn:hover {
+            background: var(--accent-orange);
+            color: var(--bg-primary);
+            box-shadow: 0 0 30px rgba(255, 107, 53, 0.3);
+        }
+
+        .generate-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Archive */
+        .archive {
+            padding: 4rem 0;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .archive-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .archive-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .archive-count {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .archive-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .archive-item {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .archive-item:hover {
+            border-color: var(--accent-purple);
+            transform: translateX(10px);
+        }
+
+        .archive-item-name {
+            font-weight: 600;
+            color: var(--accent-orange);
+            margin-bottom: 0.5rem;
+        }
+
+        .archive-item-date {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* About */
+        .about {
+            padding: 4rem 0;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .about-text {
+            color: var(--text-secondary);
+            line-height: 1.8;
+            max-width: 700px;
+        }
+
+        .about-text p {
+            margin-bottom: 1rem;
+        }
+
+        /* Hidden */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Animations */
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+
+        .glitching {
+            animation: glitch 0.3s ease-in-out;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .generator-card {
+                padding: 2rem 1.5rem;
+            }
+
+            .concept-specs {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="noise"></div>
+
+    <header class="header">
+        <div class="container">
+            <a href="../" class="back-link">← <span class="en">Back to Lab</span><span class="fr hidden">Retour au Labo</span></a>
+            <span class="lab-badge">LAB 002</span>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <span class="hero-badge">GENERATIVE DESIGN LAB</span>
+                <h1>
+                    <span class="en">TRANSFORMABLES</span>
+                    <span class="fr hidden">TRANSFORMABLES</span>
+                </h1>
+                <p class="hero-subtitle">
+                    <span class="en">Industrial design meets Transformers. Objects that shift, adapt, become something else.</span>
+                    <span class="fr hidden">Design industriel rencontre Transformers. Objets qui changent, s'adaptent, deviennent autre chose.</span>
+                </p>
+            </div>
+        </section>
+
+        <section class="generator">
+            <div class="container">
+                <div class="generator-card">
+                    <div class="concept-display" id="conceptDisplay">
+                        <div class="concept-name" id="conceptName">
+                            <span class="en">Click GENERATE to begin</span>
+                            <span class="fr hidden">Cliquez GÉNÉRER pour commencer</span>
+                        </div>
+                        <div class="concept-tagline" id="conceptTagline">—</div>
+                        <div class="concept-description" id="conceptDescription">
+                            <span class="en">An infinite combination of forms, functions, and transformations awaits.</span>
+                            <span class="fr hidden">Une infinité de combinaisons de formes, fonctions et transformations vous attend.</span>
+                        </div>
+                        <div class="concept-specs" id="conceptSpecs" style="display: none;">
+                            <div class="spec-item">
+                                <span class="spec-label">TYPE</span>
+                                <span class="spec-value" id="specType">—</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">TRANSFORMATION</span>
+                                <span class="spec-value" id="specTransform">—</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">MATERIAL</span>
+                                <span class="spec-value" id="specMaterial">—</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">COMPLEXITY</span>
+                                <span class="spec-value" id="specComplexity">—</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="generate-btn" id="generateBtn">
+                        <span class="en">GENERATE</span>
+                        <span class="fr hidden">GÉNÉRER</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section class="archive">
+            <div class="container">
+                <div class="archive-header">
+                    <h2 class="archive-title">
+                        <span class="en">GENERATED CONCEPTS</span>
+                        <span class="fr hidden">CONCEPTS GÉNÉRÉS</span>
+                    </h2>
+                    <span class="archive-count" id="archiveCount">0 <span class="en">concepts</span><span class="fr hidden">concepts</span></span>
+                </div>
+                <div class="archive-list" id="archiveList">
+                    <!-- Generated items will appear here -->
+                </div>
+            </div>
+        </section>
+
+        <section class="about">
+            <div class="container">
+                <div class="about-text">
+                    <p>
+                        <span class="en">
+                            <strong>Transformables</strong> is an ongoing exploration at the intersection of 
+                            industrial design, mechanical engineering, and childhood wonder. Inspired by 
+                            Transformers — where vehicles become heroes, where the ordinary becomes extraordinary.
+                        </span>
+                        <span class="fr hidden">
+                            <strong>Transformables</strong> est une exploration continue à l'intersection du
+                            design industriel, de l'ingénierie mécanique et de l'émerveillement d'enfance. Inspiré par
+                            les Transformers — où les véhicules deviennent des héros, où l'ordinaire devient extraordinaire.
+                        </span>
+                    </p>
+                    <p>
+                        <span class="en">
+                            Each generated concept explores what happens when function meets imagination: 
+                            a chair that becomes a ladder, a lamp that unfolds into a desk, a vase that 
+                            reconfigures based on the flowers it holds.
+                        </span>
+                        <span class="fr hidden">
+                            Chaque concept généré explore ce qui se passe quand la fonction rencontre l'imagination :
+                            une chaise qui devient une échelle, une lampe qui se déploie en bureau, un vase qui
+                            se reconfigure selon les fleurs qu'il contient.
+                        </span>
+                    </p>
+                    <p>
+                        <span class="en">
+                            Created by Theia, with François. A mechanical familiar exploring creativity.
+                        </span>
+                        <span class="fr hidden">
+                            Créé par Theia, avec François. Un familiar mécanique qui explore la créativité.
+                        </span>
+                    </p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Concept database
+        const objects = [
+            { en: 'Chair', fr: 'Chaise' },
+            { en: 'Lamp', fr: 'Lampe' },
+            { en: 'Table', fr: 'Table' },
+            { en: 'Shelf', fr: 'Étagère' },
+            { en: 'Vase', fr: 'Vase' },
+            { en: 'Clock', fr: 'Horloge' },
+            { en: 'Mirror', fr: 'Miroir' },
+            { en: 'Box', fr: 'Boîte' },
+            { en: 'Planter', fr: 'Jardinière' },
+            { en: 'Bookstand', fr: 'Porte-livres' },
+            { en: 'Coat rack', fr: 'Porte-manteau' },
+            { en: 'Stool', fr: 'Tabouret' },
+            { en: 'Desk organizer', fr: 'Organiseur de bureau' },
+            { en: 'Speaker', fr: 'Haut-parleur' },
+            { en: 'Fan', fr: 'Ventilateur' }
+        ];
+
+        const transforms = [
+            { en: 'unfolds into', fr: 'se déploie en' },
+            { en: 'collapses into', fr: 'se replie en' },
+            { en: 'rotates to become', fr: 'pivote pour devenir' },
+            { en: 'expands into', fr: 's\'étend en' },
+            { en: 'reconfigures as', fr: 'se reconfigure en' },
+            { en: 'transforms into', fr: 'se transforme en' },
+            { en: 'mutates into', fr: 'mute en' },
+            { en: 'converts to', fr: 'se convertit en' }
+        ];
+
+        const targets = [
+            { en: 'ladder', fr: 'échelle' },
+            { en: 'storage unit', fr: 'unité de rangement' },
+            { en: 'workstation', fr: 'poste de travail' },
+            { en: 'sculpture', fr: 'sculpture' },
+            { en: 'room divider', fr: 'séparateur de pièce' },
+            { en: 'bed', fr: 'lit' },
+            { en: 'exercise equipment', fr: 'équipement d\'exercice' },
+            { en: 'display case', fr: 'vitrine' },
+            { en: 'musical instrument', fr: 'instrument de musique' },
+            { en: 'charging station', fr: 'station de charge' },
+            { en: 'shelving system', fr: 'système d\'étagères' },
+            { en: 'game table', fr: 'table de jeu' }
+        ];
+
+        const materials = [
+            'Brushed aluminum',
+            'Carbon fiber',
+            'Bamboo composite',
+            'Recycled ocean plastic',
+            'Aged brass',
+            'Tempered glass',
+            'Concrete resin',
+            'Cork matrix',
+            'Titanium mesh',
+            'Oak plywood',
+            'Ceramic polymer',
+            'Recycled rubber'
+        ];
+
+        const mechanisms = [
+            { en: 'Hydraulic pistons', fr: 'Pistons hydrauliques' },
+            { en: 'Magnetic joints', fr: 'Joints magnétiques' },
+            { en: 'Gear-driven hinges', fr: 'Charnières à engrenages' },
+            { en: 'Pneumatic actuators', fr: 'Actionneurs pneumatiques' },
+            { en: 'Servo motors', fr: 'Servomoteurs' },
+            { en: 'Spring-loaded pivots', fr: 'Pivots à ressort' },
+            { en: 'Shape-memory alloy', fr: 'Alliage à mémoire de forme' },
+            { en: 'Electromagnetic locks', fr: 'Verrous électromagnétiques' }
+        ];
+
+        const complexities = ['Low', 'Medium', 'High', 'Extreme'];
+
+        // Archive storage
+        let generatedConcepts = [];
+
+        // Generate random concept
+        function generateConcept() {
+            const lang = document.querySelector('.en').classList.contains('hidden') ? 'fr' : 'en';
+            
+            const obj = objects[Math.floor(Math.random() * objects.length)];
+            const transform = transforms[Math.floor(Math.random() * transforms.length)];
+            const target = targets[Math.floor(Math.random() * targets.length)];
+            const material = materials[Math.floor(Math.random() * materials.length)];
+            const mechanism = mechanisms[Math.floor(Math.random() * mechanisms.length)];
+            const complexity = complexities[Math.floor(Math.random() * complexities.length)];
+
+            const conceptName = `${obj[lang]} ${transform[lang]} ${target[lang]}`;
+            const conceptNameEn = `${obj.en} ${transform.en} ${target.en}`;
+            
+            const descriptions = {
+                en: [
+                    `A ${obj.en.toLowerCase()} crafted from ${material.toLowerCase()}, designed to ${transform.en} ${target.en} through an elegant system of ${mechanism.en.toLowerCase()}. The transformation occurs smoothly, with each component finding its new purpose in the alternate configuration.`,
+                    `Inspired by industrial origami, this ${obj.en.toLowerCase()} challenges conventional form. ${mechanism.en} hidden within the structure enable it to ${transform.en} ${target.en}, adapting to the user's needs throughout the day.`,
+                    `Function follows transformation in this ${material.toLowerCase()} ${obj.en.toLowerCase()}. What begins as furniture becomes architecture, as ${mechanism.en.toLowerCase()} orchestrate the shift from one state to another.`,
+                    `The boundary between ${obj.en.toLowerCase()} and ${target.en} dissolves in this experimental design. ${material} provides the skeleton; ${mechanism.en.toLowerCase()} provide the muscle.`
+                ],
+                fr: [
+                    `Une ${obj.fr.toLowerCase()} fabriquée en ${material.toLowerCase()}, conçue pour ${transform.fr} ${target.fr} grâce à un système élégant de ${mechanism.fr.toLowerCase()}. La transformation se produit en douceur, chaque composant trouvant sa nouvelle fonction dans la configuration alternative.`,
+                    `Inspirée par l'origami industriel, cette ${obj.fr.toLowerCase()} défie la forme conventionnelle. Des ${mechanism.fr.toLowerCase()} cachés dans la structure lui permettent de ${transform.fr} ${target.fr}, s'adaptant aux besoins de l'utilisateur tout au long de la journée.`,
+                    `La fonction suit la transformation dans cette ${obj.fr.toLowerCase()} en ${material.toLowerCase()}. Ce qui commence comme un meuble devient architecture, tandis que des ${mechanism.fr.toLowerCase()} orchestrent le passage d'un état à l'autre.`,
+                    `La frontière entre ${obj.fr.toLowerCase()} et ${target.fr} s'efface dans ce design expérimental. Le ${material.toLowerCase()} fournit le squelette ; les ${mechanism.fr.toLowerCase()} fournissent les muscles.`
+                ]
+            };
+
+            const description = descriptions[lang][Math.floor(Math.random() * descriptions[lang].length)];
+
+            return {
+                name: conceptName,
+                nameEn: conceptNameEn,
+                tagline: lang === 'en' ? 'Industrial Transformer Concept' : 'Concept de Transformer Industriel',
+                description: description,
+                type: obj[lang],
+                transform: `${transform[lang]} ${target[lang]}`,
+                material: material,
+                complexity: complexity,
+                timestamp: new Date().toISOString()
+            };
+        }
+
+        // Display concept
+        function displayConcept(concept) {
+            const display = document.getElementById('conceptDisplay');
+            display.classList.add('glitching');
+            
+            setTimeout(() => {
+                document.getElementById('conceptName').textContent = concept.name;
+                document.getElementById('conceptTagline').textContent = concept.tagline;
+                document.getElementById('conceptDescription').innerHTML = `<p>${concept.description}</p>`;
+                
+                document.getElementById('specType').textContent = concept.type;
+                document.getElementById('specTransform').textContent = concept.transform;
+                document.getElementById('specMaterial').textContent = concept.material;
+                document.getElementById('specComplexity').textContent = concept.complexity;
+                document.getElementById('conceptSpecs').style.display = 'grid';
+                
+                display.classList.remove('glitching');
+            }, 150);
+        }
+
+        // Add to archive
+        function addToArchive(concept) {
+            generatedConcepts.unshift(concept);
+            
+            const archiveList = document.getElementById('archiveList');
+            const archiveItem = document.createElement('div');
+            archiveItem.className = 'archive-item';
+            archiveItem.innerHTML = `
+                <div class="archive-item-name">${concept.nameEn}</div>
+                <div class="archive-item-date">${new Date(concept.timestamp).toLocaleString()}</div>
+            `;
+            
+            archiveItem.addEventListener('click', () => displayConcept(concept));
+            archiveList.insertBefore(archiveItem, archiveList.firstChild);
+            
+            document.getElementById('archiveCount').innerHTML = `${generatedConcepts.length} <span class="en">concepts</span><span class="fr hidden">concepts</span>`;
+        }
+
+        // Event listeners
+        document.getElementById('generateBtn').addEventListener('click', () => {
+            const concept = generateConcept();
+            displayConcept(concept);
+            addToArchive(concept);
+        });
+
+        // Console message
+        console.log('%c🤖 TRANSFORMABLES — Lab 002', 'font-size: 20px; font-weight: bold; color: #9d4edd;');
+        console.log('%cGenerative industrial design concepts', 'font-size: 12px; color: #888;');
+    </script>
+</body>
+</html>
