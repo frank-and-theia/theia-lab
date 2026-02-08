@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WAVEFORMS — THEIA Lab</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #111111;
+            --bg-tertiary: #1a1a1a;
+            --text-primary: #f0f0f0;
+            --text-secondary: #888888;
+            --text-muted: #555555;
+            --accent-orange: #ff6b35;
+            --accent-cyan: #00d4ff;
+            --accent-purple: #9d4edd;
+            --accent-green: #00ff88;
+            --border-color: #333333;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-mono);
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        .noise {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 60px;
+        }
+
+        .back-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            transition: color 0.3s;
+        }
+
+        .back-link:hover {
+            color: var(--accent-cyan);
+        }
+
+        .lab-badge {
+            font-size: 0.75rem;
+            color: var(--accent-green);
+            letter-spacing: 0.2em;
+        }
+
+        /* Main Layout */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr 280px;
+            gap: 2rem;
+            padding-top: 80px;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            padding: 2rem 1.5rem;
+            overflow-y: auto;
+            max-height: calc(100vh - 80px);
+        }
+
+        .sidebar-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--accent-cyan);
+            letter-spacing: 0.1em;
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+        }
+
+        .mode-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .mode-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-family: var(--font-mono);
+            font-size: 0.875rem;
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: left;
+        }
+
+        .mode-btn:hover {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+
+        .mode-btn.active {
+            background: var(--accent-cyan);
+            border-color: var(--accent-cyan);
+            color: var(--bg-primary);
+        }
+
+        /* Canvas Area */
+        .canvas-area {
+            display: flex;
+            flex-direction: column;
+            padding: 2rem 0;
+        }
+
+        .canvas-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .canvas-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .canvas-fps {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+
+        #waveCanvas {
+            width: 100%;
+            height: 500px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            cursor: crosshair;
+        }
+
+        /* Controls Panel */
+        .controls {
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border-color);
+            padding: 2rem 1.5rem;
+            overflow-y: auto;
+            max-height: calc(100vh - 80px);
+        }
+
+        .controls-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--accent-orange);
+            letter-spacing: 0.1em;
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+        }
+
+        .control-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .control-value {
+            color: var(--accent-cyan);
+        }
+
+        input[type="range"] {
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 4px;
+            background: var(--border-color);
+            outline: none;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--accent-orange);
+            cursor: pointer;
+            border: none;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: var(--accent-orange);
+            cursor: pointer;
+            border: none;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 2rem;
+        }
+
+        .action-btn {
+            flex: 1;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            padding: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+
+        .action-btn:hover {
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+        }
+
+        .action-btn.primary {
+            background: var(--accent-orange);
+            border-color: var(--accent-orange);
+            color: var(--bg-primary);
+        }
+
+        .action-btn.primary:hover {
+            background: transparent;
+            color: var(--accent-orange);
+        }
+
+        /* Info Panel */
+        .info-panel {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .info-title {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .info-text {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .sidebar, .controls {
+                max-height: none;
+                border: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+        }
+
+        /* Hidden */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-cyan);
+        }
+    </style>
+</head>
+<body>
+    <div class="noise"></div>
+
+    <header class="header">
+        <div class="container">
+            <a href="../" class="back-link">← <span class="en">Back to Lab</span><span class="fr hidden">Retour au Labo</span></a>
+            <span class="lab-badge">LAB 003</span>
+        </div>
+    </header>
+
+    <div class="main-layout">
+        <!-- Left Sidebar - Modes -->
+        <aside class="sidebar">
+            <h2 class="sidebar-title">
+                <span class="en">VISUALIZATION MODE</span>
+                <span class="fr hidden">MODE VISUALISATION</span>
+            </h2>
+            <div class="mode-selector">
+                <button class="mode-btn active" data-mode="waveform">
+                    <span class="en">Waveform</span>
+                    <span class="fr hidden">Ondes</span>
+                </button>
+                <button class="mode-btn" data-mode="topography">
+                    <span class="en">Topography</span>
+                    <span class="fr hidden">Topographie</span>
+                </button>
+                <button class="mode-btn" data-mode="parametric">
+                    <span class="en">Parametric</span>
+                    <span class="fr hidden">Paramétrique</span>
+                </button>
+                <button class="mode-btn" data-mode="interference">
+                    <span class="en">Interference</span>
+                    <span class="fr hidden">Interférence</span>
+                </button>
+            </div>
+
+            <div class="info-panel">
+                <h3 class="info-title">
+                    <span class="en">About</span>
+                    <span class="fr hidden">À propos</span>
+                </h3>
+                <p class="info-text" id="modeDescription">
+                    <span class="en">Generate real-time waveforms using sine and cosine functions. Adjust frequency, amplitude, and phase to create harmonic patterns.</span>
+                    <span class="fr hidden">Générez des ondes en temps réel en utilisant des fonctions sinus et cosinus. Ajustez la fréquence, l'amplitude et la phase pour créer des motifs harmoniques.</span>
+                </p>
+            </div>
+        </aside>
+
+        <!-- Center - Canvas -->
+        <main class="canvas-area">
+            <div class="canvas-header">
+                <h1 class="canvas-title">
+                    <span class="en">WAVEFORMS</span>
+                    <span class="fr hidden">ONDES</span>
+                </h1>
+                <span class="canvas-fps" id="fpsCounter">60 FPS</span>
+            </div>
+            <canvas id="waveCanvas"></canvas>
+        </main>
+
+        <!-- Right Sidebar - Controls -->
+        <aside class="controls">
+            <h2 class="controls-title">
+                <span class="en">Parameters</span>
+                <span class="fr hidden">Paramètres</span>
+            </h2>
+
+            <div id="controlsContainer">
+                <!-- Waveform Controls -->
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Frequency</span>
+                        <span class="control-value" id="freqValue">2.0</span>
+                    </div>
+                    <input type="range" id="frequency" min="0.1" max="10" step="0.1" value="2">
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Amplitude</span>
+                        <span class="control-value" id="ampValue">100</span>
+                    </div>
+                    <input type="range" id="amplitude" min="10" max="200" step="5" value="100">
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Phase Shift</span>
+                        <span class="control-value" id="phaseValue">0</span>
+                    </div>
+                    <input type="range" id="phase" min="0" max="360" step="1" value="0">
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Wave Count</span>
+                        <span class="control-value" id="waveCountValue">3</span>
+                    </div>
+                    <input type="range" id="waveCount" min="1" max="10" step="1" value="3">
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Speed</span>
+                        <span class="control-value" id="speedValue">1.0</span>
+                    </div>
+                    <input type="range" id="speed" min="0" max="3" step="0.1" value="1">
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Line Width</span>
+                        <span class="control-value" id="lineWidthValue">2</span>
+                    </div>
+                    <input type="range" id="lineWidth" min="1" max="10" step="0.5" value="2">
+                </div>
+            </div>
+
+            <div class="action-btns">
+                <button class="action-btn" id="randomizeBtn">
+                    <span class="en">Random</span>
+                    <span class="fr hidden">Aléatoire</span>
+                </button>
+                <button class="action-btn primary" id="pauseBtn">
+                    <span class="en">Pause</span>
+                    <span class="fr hidden">Pause</span>
+                </button>
+            </div>
+
+            <div class="action-btns">
+                <button class="action-btn" id="screenshotBtn">
+                    <span class="en">Save Image</span>
+                    <span class="fr hidden">Sauver Image</span>
+                </button>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        // Canvas setup
+        const canvas = document.getElementById('waveCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Set canvas size
+        function resizeCanvas() {
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // State
+        let currentMode = 'waveform';
+        let isPaused = false;
+        let animationId;
+        let time = 0;
+
+        // Parameters
+        const params = {
+            frequency: 2,
+            amplitude: 100,
+            phase: 0,
+            waveCount: 3,
+            speed: 1,
+            lineWidth: 2
+        };
+
+        // Mode configurations
+        const modeConfigs = {
+            waveform: {
+                en: 'Generate real-time waveforms using sine and cosine functions. Adjust frequency, amplitude, and phase to create harmonic patterns.',
+                fr: 'Générez des ondes en temps réel en utilisant des fonctions sinus et cosinus. Ajustez la fréquence, l\'amplitude et la phase pour créer des motifs harmoniques.'
+            },
+            topography: {
+                en: 'Create contour lines that simulate topographic maps. The waves stack to form elevation patterns like geographical terrain.',
+                fr: 'Créez des lignes de contour qui simulent des cartes topographiques. Les ondes s\'empilent pour former des motifs d\'élévation comme un terrain géographique.'
+            },
+            parametric: {
+                en: 'Parametric equations create organic, flowing shapes. Lissajous curves and harmonic oscillations produce mesmerizing patterns.',
+                fr: 'Les équations paramétriques créent des formes organiques et fluides. Les courbes de Lissajous et oscillations harmoniques produisent des motifs hypnotiques.'
+            },
+            interference: {
+                en: 'Multiple wave sources create interference patterns. Where waves meet, they amplify or cancel, creating complex moiré effects.',
+                fr: 'Des sources d\'ondes multiples créent des motifs d\'interférence. Là où les ondes se rencontrent, elles s\'amplifient ou s\'annulent, créant des effets de moiré complexes.'
+            }
+        };
+
+        // Color palette
+        const colors = ['#ff6b35', '#00d4ff', '#9d4edd', '#00ff88', '#ff006e'];
+
+        // Drawing functions
+        function clearCanvas() {
+            ctx.fillStyle = '#111111';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function drawWaveform() {
+            const centerY = canvas.height / 2;
+            const width = canvas.width;
+            
+            for (let w = 0; w < params.waveCount; w++) {
+                ctx.beginPath();
+                ctx.strokeStyle = colors[w % colors.length];
+                ctx.lineWidth = params.lineWidth;
+                
+                const waveOffset = (w / params.waveCount) * Math.PI * 2;
+                const freq = params.frequency * (1 + w * 0.3);
+                const amp = params.amplitude * (1 - w * 0.1);
+                
+                for (let x = 0; x < width; x++) {
+                    const normalizedX = (x / width) * Math.PI * 2 * freq;
+                    const phaseRad = (params.phase * Math.PI / 180) + waveOffset;
+                    const y = centerY + Math.sin(normalizedX + time + phaseRad) * amp;
+                    
+                    if (x === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                
+                ctx.stroke();
+            }
+        }
+
+        function drawTopography() {
+            const width = canvas.width;
+            const height = canvas.height;
+            const lines = 20;
+            
+            for (let i = 0; i < lines; i++) {
+                const yOffset = (height / lines) * i;
+                const amplitude = params.amplitude * (0.3 + i / lines * 0.7);
+                
+                ctx.beginPath();
+                ctx.strokeStyle = colors[i % colors.length];
+                ctx.lineWidth = params.lineWidth;
+                ctx.globalAlpha = 0.5 + (i / lines) * 0.5;
+                
+                for (let x = 0; x < width; x++) {
+                    const normalizedX = (x / width) * Math.PI * 2 * params.frequency;
+                    const y = yOffset + Math.sin(normalizedX + time + i * 0.5) * (amplitude * 0.3);
+                    
+                    if (x === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                
+                ctx.stroke();
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        function drawParametric() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            ctx.beginPath();
+            ctx.strokeStyle = colors[0];
+            ctx.lineWidth = params.lineWidth;
+            
+            const steps = 1000;
+            const a = params.frequency;
+            const b = params.waveCount;
+            
+            for (let i = 0; i < steps; i++) {
+                const t = (i / steps) * Math.PI * 4;
+                const scale = params.amplitude * 2;
+                
+                const x = centerX + Math.sin(a * t + time) * Math.cos(b * t) * scale;
+                const y = centerY + Math.sin(a * t + time) * Math.sin(b * t) * scale;
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            
+            ctx.stroke();
+            
+            // Add second curve
+            ctx.beginPath();
+            ctx.strokeStyle = colors[1];
+            for (let i = 0; i < steps; i++) {
+                const t = (i / steps) * Math.PI * 4;
+                const scale = params.amplitude * 1.5;
+                
+                const x = centerX + Math.cos(a * t - time * 0.5) * Math.cos(b * t + time) * scale;
+                const y = centerY + Math.cos(a * t - time * 0.5) * Math.sin(b * t + time) * scale;
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            
+            ctx.stroke();
+        }
+
+        function drawInterference() {
+            const width = canvas.width;
+            const height = canvas.height;
+            const centerY = height / 2;
+            
+            const sources = params.waveCount;
+            const sourceSpacing = width / (sources + 1);
+            
+            ctx.beginPath();
+            ctx.strokeStyle = colors[0];
+            ctx.lineWidth = params.lineWidth;
+            
+            for (let x = 0; x < width; x++) {
+                let amplitude = 0;
+                
+                for (let s = 0; s < sources; s++) {
+                    const sourceX = sourceSpacing * (s + 1);
+                    const distance = Math.abs(x - sourceX) / 100;
+                    const wave = Math.sin(distance * params.frequency - time * params.speed) / (1 + distance * 0.1);
+                    amplitude += wave;
+                }
+                
+                const y = centerY + amplitude * params.amplitude;
+                
+                if (x === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            
+            ctx.stroke();
+        }
+
+        // Animation loop
+        function animate() {
+            if (!isPaused) {
+                clearCanvas();
+                
+                switch (currentMode) {
+                    case 'waveform':
+                        drawWaveform();
+                        break;
+                    case 'topography':
+                        drawTopography();
+                        break;
+                    case 'parametric':
+                        drawParametric();
+                        break;
+                    case 'interference':
+                        drawInterference();
+                        break;
+                }
+                
+                time += 0.02 * params.speed;
+            }
+            
+            animationId = requestAnimationFrame(animate);
+        }
+
+        // Update parameter displays
+        function updateParamDisplay(id, value) {
+            document.getElementById(id + 'Value').textContent = value;
+            params[id] = parseFloat(value);
+        }
+
+        // Event listeners
+        document.querySelectorAll('input[type="range"]').forEach(input => {
+            input.addEventListener('input', (e) => {
+                updateParamDisplay(e.target.id, e.target.value);
+            });
+        });
+
+        // Mode switching
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentMode = btn.dataset.mode;
+                
+                // Update description
+                const lang = document.querySelector('.en').classList.contains('hidden') ? 'fr' : 'en';
+                document.getElementById('modeDescription').innerHTML = `
+                    <span class="${lang}">${modeConfigs[currentMode][lang]}</span>
+                    <span class="${lang === 'en' ? 'fr' : 'en'} hidden">${modeConfigs[currentMode][lang === 'en' ? 'fr' : 'en']}</span>
+                `;
+                
+                time = 0;
+            });
+        });
+
+        // Randomize
+        document.getElementById('randomizeBtn').addEventListener('click', () => {
+            document.getElementById('frequency').value = (Math.random() * 5 + 0.5).toFixed(1);
+            document.getElementById('amplitude').value = Math.floor(Math.random() * 150 + 50);
+            document.getElementById('phase').value = Math.floor(Math.random() * 360);
+            document.getElementById('waveCount').value = Math.floor(Math.random() * 5 + 1);
+            document.getElementById('speed').value = (Math.random() * 2 + 0.5).toFixed(1);
+            
+            document.querySelectorAll('input[type="range"]').forEach(input => {
+                updateParamDisplay(input.id, input.value);
+            });
+        });
+
+        // Pause/Play
+        document.getElementById('pauseBtn').addEventListener('click', () => {
+            isPaused = !isPaused;
+            document.getElementById('pauseBtn').innerHTML = isPaused ? 
+                '<span class="en">Play</span><span class="fr hidden">Lecture</span>' : 
+                '<span class="en">Pause</span><span class="fr hidden">Pause</span>';
+        });
+
+        // Screenshot
+        document.getElementById('screenshotBtn').addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = 'waveform-' + Date.now() + '.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        });
+
+        // FPS counter
+        let lastTime = performance.now();
+        let frames = 0;
+        
+        function updateFPS() {
+            const now = performance.now();
+            frames++;
+            
+            if (now - lastTime >= 1000) {
+                document.getElementById('fpsCounter').textContent = frames + ' FPS';
+                frames = 0;
+                lastTime = now;
+            }
+            
+            requestAnimationFrame(updateFPS);
+        }
+
+        // Start
+        animate();
+        updateFPS();
+
+        // Console message
+        console.log('%c〰️ WAVEFORMS — Lab 003', 'font-size: 20px; font-weight: bold; color: #00d4ff;');
+        console.log('%cReal-time mathematical visualization', 'font-size: 12px; color: #888;');
+    </script>
+</body>
+</html>
