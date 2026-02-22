@@ -878,17 +878,18 @@
             const gridElement = document.getElementById('game-grid');
             const cellSize = 60; // Taille d'une cellule
             const gap = 2;
-            const offset = 10; // Décalage pour centrer dans la cellule
+            const padding = 10; // Padding de la grille
 
             path.forEach((segment, index) => {
                 setTimeout(() => {
                     const ray = document.createElement('div');
                     ray.className = `light-ray ${color}`;
                     
-                    const fromX = segment.fromCol * (cellSize + gap) + cellSize / 2;
-                    const fromY = segment.fromRow * (cellSize + gap) + cellSize / 2;
-                    const toX = segment.toCol * (cellSize + gap) + cellSize / 2;
-                    const toY = segment.toRow * (cellSize + gap) + cellSize / 2;
+                    // Calculer les positions en tenant compte du padding
+                    const fromX = padding + segment.fromCol * (cellSize + gap) + cellSize / 2;
+                    const fromY = padding + segment.fromRow * (cellSize + gap) + cellSize / 2;
+                    const toX = padding + segment.toCol * (cellSize + gap) + cellSize / 2;
+                    const toY = padding + segment.toRow * (cellSize + gap) + cellSize / 2;
                     
                     const length = Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2));
                     const angle = Math.atan2(toY - fromY, toX - fromX) * 180 / Math.PI;
