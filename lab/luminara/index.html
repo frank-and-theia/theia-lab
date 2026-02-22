@@ -183,6 +183,7 @@
             background: rgba(255, 255, 255, 0.05);
             padding: 10px;
             border-radius: 10px;
+            position: relative;
         }
 
         .cell {
@@ -278,25 +279,27 @@
         .light-ray {
             position: absolute;
             pointer-events: none;
-            z-index: 10;
-            transition: opacity 0.3s ease;
+            z-index: 100;
+            border-radius: 2px;
+            transition: width 0.3s ease-out;
+            box-shadow: 0 0 15px currentColor, 0 0 30px currentColor;
         }
 
         .light-ray.white { 
-            background: linear-gradient(90deg, rgba(255,255,255,0.8), rgba(255,255,255,0.2));
-            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+            background: linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0.3) 100%);
+            color: rgba(255,255,255,0.8);
         }
         .light-ray.red { 
-            background: linear-gradient(90deg, rgba(255,107,107,0.8), rgba(255,107,107,0.2));
-            box-shadow: 0 0 10px rgba(255,107,107,0.5);
+            background: linear-gradient(90deg, rgba(255,107,107,1) 0%, rgba(255,107,107,0.3) 100%);
+            color: rgba(255,107,107,0.8);
         }
         .light-ray.green { 
-            background: linear-gradient(90deg, rgba(81,207,102,0.8), rgba(81,207,102,0.2));
-            box-shadow: 0 0 10px rgba(81,207,102,0.5);
+            background: linear-gradient(90deg, rgba(81,207,102,1) 0%, rgba(81,207,102,0.3) 100%);
+            color: rgba(81,207,102,0.8);
         }
         .light-ray.blue { 
-            background: linear-gradient(90deg, rgba(51,154,240,0.8), rgba(51,154,240,0.2));
-            box-shadow: 0 0 10px rgba(51,154,240,0.5);
+            background: linear-gradient(90deg, rgba(51,154,240,1) 0%, rgba(51,154,240,0.3) 100%);
+            color: rgba(51,154,240,0.8);
         }
 
         /* Palette d'outils */
@@ -778,22 +781,134 @@
         document.getElementById('fire-btn').addEventListener('click', fireLight);
 
         function fireLight() {
+            // Effacer les anciens rayons
+            clearRays();
+            
             // Réinitialiser les cibles
             game.targets.forEach(t => t.activated = false);
             
-            // Calculer les rayons de lumière
-            game.sources.forEach(source => {
-                traceLight(source.row, source.col, source.direction, source.color);
+            // Calculer et dessiner les rayons de lumière
+            game.sources.forEach((source, index) => {
+                setTimeout(() => {
+                    traceAndDrawLight(source.row, source.col, source.direction, source.color);
+                }, index * 300); // Délai entre les sources
             });
 
-            renderGrid();
-            updateDisplay();
+            // Vérifier victoire après animation
+            setTimeout(() => {
+                renderGrid();
+                updateDisplay();
+                const allActivated = game.targets.every(t => t.activated);
+                if (allActivated) {
+                    showVictory();
+                }
+            }, game.sources.length * 300 + 500);
+        }
 
-            // Vérifier victoire
-            const allActivated = game.targets.every(t => t.activated);
-            if (allActivated) {
-                showVictory();
+        // Effacer tous les rayons
+        function clearRays() {
+            document.querySelectorAll('.light-ray').forEach(ray => ray.remove());
+        }
+
+        // Tracer et dessiner un rayon de lumière
+        function traceAndDrawLight(startRow, startCol, direction, color) {
+            const directions = {
+                'up': { dr: -1, dc: 0 },
+                'down': { dr: 1, dc: 0 },
+                'left': { dr: 0, dc: -1 },
+                'right': { dr: 0, dc: 1 }
+            };
+
+            let row = startRow;
+            let col = startCol;
+            let dir = direction;
+            let steps = 0;
+            const maxSteps = 20;
+            const path = [];
+
+            // Calculer le chemin
+            while (steps < maxSteps) {
+                steps++;
+                const d = directions[dir];
+                const prevRow = row;
+                const prevCol = col;
+                row += d.dr;
+                col += d.dc;
+
+                // Vérifier les limites
+                if (row < 0 || row >= game.gridSize || col < 0 || col >= game.gridSize) {
+                    path.push({ fromRow: prevRow, fromCol: prevCol, toRow: row, toCol: col, dir, hit: 'boundary' });
+                    break;
+                }
+
+                path.push({ fromRow: prevRow, fromCol: prevCol, toRow: row, toCol: col, dir, color });
+
+                const cell = game.grid[row][col];
+
+                // Vérifier cible
+                if (cell.type === 'target' && cell.data.color === color) {
+                    cell.data.activated = true;
+                    const target = game.targets.find(t => t.row === row && t.col === col);
+                    if (target) target.activated = true;
+                    break;
+                }
+
+                // Vérifier miroir
+                if (cell.type === 'mirror') {
+                    const newDir = reflect(dir, cell.data.direction);
+                    if (newDir === dir) {
+                        break;
+                    }
+                    dir = newDir;
+                    continue;
+                }
+
+                // Vérifier bloqueur
+                if (cell.type === 'blocker') {
+                    break;
+                }
             }
+
+            // Dessiner le rayon avec animation
+            drawRay(path, color);
+        }
+
+        // Dessiner le rayon visuel
+        function drawRay(path, color) {
+            const gridElement = document.getElementById('game-grid');
+            const cellSize = 60; // Taille d'une cellule
+            const gap = 2;
+            const offset = 10; // Décalage pour centrer dans la cellule
+
+            path.forEach((segment, index) => {
+                setTimeout(() => {
+                    const ray = document.createElement('div');
+                    ray.className = `light-ray ${color}`;
+                    
+                    const fromX = segment.fromCol * (cellSize + gap) + cellSize / 2;
+                    const fromY = segment.fromRow * (cellSize + gap) + cellSize / 2;
+                    const toX = segment.toCol * (cellSize + gap) + cellSize / 2;
+                    const toY = segment.toRow * (cellSize + gap) + cellSize / 2;
+                    
+                    const length = Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2));
+                    const angle = Math.atan2(toY - fromY, toX - fromX) * 180 / Math.PI;
+                    
+                    ray.style.width = '0px';
+                    ray.style.height = '4px';
+                    ray.style.left = fromX + 'px';
+                    ray.style.top = fromY + 'px';
+                    ray.style.transform = `rotate(${angle}deg)`;
+                    ray.style.transformOrigin = '0 50%';
+                    
+                    gridElement.appendChild(ray);
+                    
+                    // Animation d'extension
+                    setTimeout(() => {
+                        ray.style.width = length + 'px';
+                    }, 50);
+                    
+                }, index * 100); // Délai entre chaque segment
+            });
         }
 
         // Tracer un rayon de lumière
