@@ -441,6 +441,24 @@
                 font-size: 2.5rem;
             }
         }
+
+        @media (max-width: 600px) {
+            .info-panel {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .level-info {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            
+            .btn-fire {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -841,22 +859,25 @@
                     break;
                 }
 
-                path.push({ fromRow: prevRow, fromCol: prevCol, toRow: row, toCol: col, dir, color });
-
                 const cell = game.grid[row][col];
 
-                // Vérifier cible
-                if (cell.type === 'target' && cell.data.color === color) {
-                    cell.data.activated = true;
-                    const target = game.targets.find(t => t.row === row && t.col === col);
-                    if (target) target.activated = true;
+                // Vérifier cible AVANT d'ajouter le segment
+                if (cell.type === 'target') {
+                    path.push({ fromRow: prevRow, fromCol: prevCol, toRow: row, toCol: col, dir, color });
+                    if (cell.data.color === color) {
+                        cell.data.activated = true;
+                        const target = game.targets.find(t => t.row === row && t.col === col);
+                        if (target) target.activated = true;
+                    }
                     break;
                 }
 
-                // Vérifier miroir
+                // Vérifier miroir - la lumière arrive jusqu'au miroir puis se reflète
                 if (cell.type === 'mirror') {
+                    path.push({ fromRow: prevRow, fromCol: prevCol, toRow: row, toCol: col, dir, color });
                     const newDir = reflect(dir, cell.data.direction);
                     if (newDir === dir) {
+                        // Retour (miroir bloque)
                         break;
                     }
                     dir = newDir;
@@ -865,8 +886,12 @@
 
                 // Vérifier bloqueur
                 if (cell.type === 'blocker') {
+                    path.push({ fromRow: prevRow, fromCol: prevCol, toRow: row, toCol: col, dir, color });
                     break;
                 }
+
+                // Cellule vide - ajouter le segment
+                path.push({ fromRow: prevRow, fromCol: prevCol, toRow: row, toCol: col, dir, color });
             }
 
             // Dessiner le rayon avec animation
@@ -876,7 +901,10 @@
         // Dessiner le rayon visuel
         function drawRay(path, color) {
             const gridElement = document.getElementById('game-grid');
-            const cellSize = 60; // Taille d'une cellule
+            
+            // Calculer dynamiquement la taille des cellules selon le viewport
+            const isMobile = window.innerWidth <= 900;
+            const cellSize = isMobile ? 45 : 60; // Taille responsive
             const gap = 2;
             const padding = 10; // Padding de la grille
 
