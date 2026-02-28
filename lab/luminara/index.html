@@ -738,6 +738,9 @@
 
         // Charger un niveau
         function loadLevel(levelId) {
+            // Effacer les rayons de lumière
+            clearRays();
+            
             // Reset
             game.mirrors = [];
             game.targets = [];
