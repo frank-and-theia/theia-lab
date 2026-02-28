@@ -414,6 +414,92 @@
             opacity: 0.9;
         }
 
+        /* Sélecteur de niveau */
+        .level-selector {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .level-selector-modal {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 30px 40px;
+            border-radius: 20px;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .level-selector-modal h3 {
+            font-family: 'Orbitron', sans-serif;
+            color: #feca57;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .level-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .level-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 15px 10px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .level-btn.unlocked {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3));
+            border-color: rgba(102, 126, 234, 0.5);
+        }
+
+        .level-btn.unlocked:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.5), rgba(118, 75, 162, 0.5));
+        }
+
+        .level-btn.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .level-num {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .level-name {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .level-description {
+            color: #888;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+
         /* Responsive */
         @media (max-width: 900px) {
             .game-area {
@@ -487,8 +573,13 @@
                     <span class="info-value" id="targets-display">0/1</span>
                 </div>
             </div>
-            <button class="btn btn-fire" id="fire-btn">LANCER LA LUMIÈRE !</button>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+                <button class="btn" onclick="showLevelSelector()">📋 NIVEAUX</button>
+                <button class="btn btn-fire" id="fire-btn">LANCER LA LUMIÈRE !</button>
+            </div>
         </div>
+        
+        <p class="level-description" id="level-desc">Guide la lumière blanche vers la cible</p>
 
         <!-- Zone de jeu -->
         <div class="game-area">
@@ -536,8 +627,8 @@
     <!-- Message de victoire -->
     <div class="victory" id="victory-modal">
         <h2>✨ VICTOIRE ! ✨</h2>
-        <p>Niveau complété avec succès !</p>
-        <button class="btn" style="margin-top: 20px;" onclick="nextLevel()">NIVEAU SUIVANT ➜</button>
+        <p id="victory-text">Niveau complété avec succès !</p>
+        <button class="btn" style="margin-top: 20px;" id="victory-btn" onclick="nextLevel()">NIVEAU SUIVANT ➜</button>
     </div>
 
     <script>
@@ -601,8 +692,52 @@
             loadLevel(game.level);
         }
 
+        // Niveaux disponibles
+        const levels = [
+            {
+                id: 1,
+                name: 'Premiers Pas',
+                description: 'Guide la lumière blanche vers la cible',
+                maxMirrors: 2,
+                sources: [{row: 3, col: 0, color: 'white', direction: 'right'}],
+                targets: [{row: 3, col: 7, color: 'white'}],
+                blockers: [],
+                prisms: [],
+                portals: []
+            },
+            {
+                id: 2,
+                name: 'Le Coude',
+                description: 'Un miroir ne suffit pas...',
+                maxMirrors: 3,
+                sources: [{row: 1, col: 0, color: 'white', direction: 'right'}],
+                targets: [{row: 6, col: 7, color: 'white'}],
+                blockers: [
+                    {row: 1, col: 4}, {row: 1, col: 5}, {row: 1, col: 6}, {row: 1, col: 7},
+                    {row: 2, col: 4}, {row: 2, col: 5}, {row: 2, col: 6}, {row: 2, col: 7}
+                ],
+                prisms: [],
+                portals: []
+            },
+            {
+                id: 3,
+                name: 'Le Labyrinthe',
+                description: 'Évite les murs',
+                maxMirrors: 5,
+                sources: [{row: 0, col: 0, color: 'white', direction: 'down'}],
+                targets: [{row: 7, col: 7, color: 'white'}],
+                blockers: [
+                    {row: 2, col: 2}, {row: 2, col: 3}, {row: 2, col: 4}, {row: 2, col: 5},
+                    {row: 3, col: 5}, {row: 4, col: 5}, {row: 5, col: 5},
+                    {row: 5, col: 2}, {row: 5, col: 3}, {row: 5, col: 4}
+                ],
+                prisms: [],
+                portals: []
+            }
+        ];
+
         // Charger un niveau
-        function loadLevel(level) {
+        function loadLevel(levelId) {
             // Reset
             game.mirrors = [];
             game.targets = [];
@@ -611,18 +746,92 @@
             game.prisms = [];
             game.blockers = [];
 
-            // Niveau 1 : Tutorial simple
-            if (level === 1) {
-                // Source blanche à gauche
-                addSource(3, 0, 'white', 'right');
-                // Cible blanche à droite
-                addTarget(3, 7, 'white');
-                // 3 miroirs disponibles
-                game.maxMirrors = 3;
-            }
+            const level = levels.find(l => l.id === levelId) || levels[0];
+            game.level = level.id;
+            game.maxMirrors = level.maxMirrors;
 
+            // Charger éléments
+            level.sources.forEach(s => addSource(s.row, s.col, s.color, s.direction));
+            level.targets.forEach(t => addTarget(t.row, t.col, t.color));
+            level.blockers.forEach(b => addBlocker(b.row, b.col));
+            level.prisms.forEach(p => addPrism(p.row, p.col));
+            level.portals.forEach(p => addPortal(p.entry.row, p.entry.col, p.exit.row, p.exit.col));
+
+            // Sauvegarder progression
+            saveProgress();
+            
             updateDisplay();
             renderGrid();
+        }
+
+        // Ajouter un bloqueur
+        function addBlocker(row, col) {
+            game.blockers.push({row, col});
+            game.grid[row][col].type = 'blocker';
+        }
+
+        // Ajouter un prisme
+        function addPrism(row, col) {
+            game.prisms.push({row, col});
+            game.grid[row][col].type = 'prism';
+        }
+
+        // Ajouter des portails
+        function addPortal(entryRow, entryCol, exitRow, exitCol) {
+            game.portals.push({entry: {row: entryRow, col: entryCol}, exit: {row: exitRow, col: exitCol}});
+            game.grid[entryRow][entryCol].type = 'portal_entry';
+            game.grid[entryRow][entryCol].data = {exitRow, exitCol};
+            game.grid[exitRow][exitCol].type = 'portal_exit';
+        }
+
+        // Sauvegarder progression
+        function saveProgress() {
+            const progress = {
+                currentLevel: game.level,
+                unlockedLevels: Math.max(game.level, getUnlockedLevel())
+            };
+            localStorage.setItem('luminara_progress', JSON.stringify(progress));
+        }
+
+        // Récupérer niveau débloqué
+        function getUnlockedLevel() {
+            const saved = localStorage.getItem('luminara_progress');
+            if (saved) {
+                const progress = JSON.parse(saved);
+                return progress.unlockedLevels || 1;
+            }
+            return 1;
+        }
+
+        // Ouvrir sélecteur de niveau
+        function showLevelSelector() {
+            const unlocked = getUnlockedLevel();
+            const selector = document.createElement('div');
+            selector.className = 'level-selector';
+            selector.innerHTML = `
+                <div class="level-selector-modal">
+                    <h3>Choisir un niveau</h3>
+                    <div class="level-grid">
+                        ${levels.map(l => `
+                            <button class="level-btn ${l.id <= unlocked ? 'unlocked' : 'locked'}" 
+                                    onclick="${l.id <= unlocked ? `loadLevel(${l.id}); hideLevelSelector();` : ''}"
+                                    ${l.id > unlocked ? 'disabled' : ''}>
+                                <span class="level-num">${l.id}</span>
+                                <span class="level-name">${l.name}</span>
+                                ${l.id > unlocked ? '🔒' : ''}
+                            </button>
+                        `).join('')}
+                    </div>
+                    <button class="btn" onclick="hideLevelSelector()">Fermer</button>
+                </div>
+            `;
+            document.body.appendChild(selector);
+        }
+
+        // Cacher sélecteur
+        function hideLevelSelector() {
+            const selector = document.querySelector('.level-selector');
+            if (selector) selector.remove();
         }
 
         // Ajouter une source de lumière
@@ -773,6 +982,33 @@
                         mirror.textContent = mirrorSymbols[cell.data.direction];
                         element.appendChild(mirror);
                     }
+
+                    if (cell.type === 'blocker') {
+                        const blocker = document.createElement('div');
+                        blocker.className = 'blocker';
+                        element.appendChild(blocker);
+                    }
+
+                    if (cell.type === 'prism') {
+                        const prism = document.createElement('span');
+                        prism.className = 'prism';
+                        prism.textContent = '💎';
+                        element.appendChild(prism);
+                    }
+
+                    if (cell.type === 'portal_entry') {
+                        const portal = document.createElement('span');
+                        portal.className = 'portal entry';
+                        portal.textContent = '🌀';
+                        element.appendChild(portal);
+                    }
+
+                    if (cell.type === 'portal_exit') {
+                        const portal = document.createElement('span');
+                        portal.className = 'portal exit';
+                        portal.textContent = '🎯';
+                        element.appendChild(portal);
+                    }
                 }
             }
         }
@@ -784,6 +1020,12 @@
             
             const activatedTargets = game.targets.filter(t => t.activated).length;
             document.getElementById('targets-display').textContent = `${activatedTargets}/${game.targets.length}`;
+            
+            // Mettre à jour description
+            const level = levels.find(l => l.id === game.level);
+            if (level) {
+                document.getElementById('level-desc').textContent = level.description;
+            }
         }
 
         // Gestion des outils
@@ -872,6 +1114,44 @@
                     break;
                 }
 
+                // Vérifier prisme - divise la lumière
+                if (cell.type === 'prism') {
+                    path.push({ fromRow: prevRow, fromCol: prevCol, toRow: row, toCol: col, dir, color });
+                    
+                    // Si lumière blanche, la diviser en RGB
+                    if (color === 'white') {
+                        // Continuer avec les 3 couleurs (seront dessinés en parallèle visuellement)
+                        setTimeout(() => traceAndDrawLight(row, col, dir, 'red'), 100);
+                        setTimeout(() => traceAndDrawLight(row, col, dir, 'green'), 200);
+                        setTimeout(() => traceAndDrawLight(row, col, dir, 'blue'), 300);
+                    }
+                    break;
+                }
+
+                // Vérifier portail d'entrée - téléportation
+                if (cell.type === 'portal_entry') {
+                    path.push({ fromRow: prevRow, fromCol: prevCol, toRow: row, toCol: col, dir, color });
+                    
+                    // Téléporter à la sortie
+                    const exitRow = cell.data.exitRow;
+                    const exitCol = cell.data.exitCol;
+                    
+                    // Ajouter un segment "invisible" pour la téléportation
+                    path.push({ 
+                        fromRow: row, 
+                        fromCol: col, 
+                        toRow: exitRow, 
+                        toCol: exitCol, 
+                        dir, 
+                        color,
+                        teleport: true 
+                    });
+                    
+                    row = exitRow;
+                    col = exitCol;
+                    continue;
+                }
+
                 // Vérifier miroir - la lumière arrive jusqu'au miroir puis se reflète
                 if (cell.type === 'mirror') {
                     path.push({ fromRow: prevRow, fromCol: prevCol, toRow: row, toCol: col, dir, color });
@@ -923,11 +1203,20 @@
                     const angle = Math.atan2(toY - fromY, toX - fromX) * 180 / Math.PI;
                     
                     ray.style.width = '0px';
-                    ray.style.height = '4px';
+                    ray.style.height = segment.teleport ? '2px' : '4px';
                     ray.style.left = fromX + 'px';
                     ray.style.top = fromY + 'px';
                     ray.style.transform = `rotate(${angle}deg)`;
                     ray.style.transformOrigin = '0 50%';
+                    
+                    // Effet spécial pour téléportation
+                    if (segment.teleport) {
+                        ray.style.opacity = '0.5';
+                        ray.style.borderStyle = 'dashed';
+                        ray.style.borderWidth = '1px';
+                        ray.style.borderColor = 'currentColor';
+                        ray.style.background = 'transparent';
+                    }
                     
                     gridElement.appendChild(ray);
                     
@@ -1014,14 +1303,42 @@
 
         // Afficher la victoire
         function showVictory() {
-            document.getElementById('victory-modal').classList.add('show');
+            const modal = document.getElementById('victory-modal');
+            const victoryText = document.getElementById('victory-text');
+            const victoryBtn = document.getElementById('victory-btn');
+            const isLastLevel = game.level >= levels.length;
+            
+            if (isLastLevel) {
+                victoryText.innerHTML = 'Tous les niveaux disponibles sont complétés !<br><span style="font-size: 0.9rem; opacity: 0.8;">Reviens le prochain weekend créatif pour de nouveaux défis !</span>';
+                victoryBtn.textContent = 'CONTINUER À JOUER';
+                victoryBtn.onclick = hideVictory;
+            } else {
+                victoryText.textContent = `Niveau ${game.level} complété avec succès !`;
+                victoryBtn.textContent = 'NIVEAU SUIVANT ➜';
+                victoryBtn.onclick = nextLevel;
+            }
+            
+            modal.classList.add('show');
+            
+            // Débloquer niveau suivant
+            const currentUnlocked = getUnlockedLevel();
+            if (game.level >= currentUnlocked) {
+                saveProgress();
+            }
+        }
+
+        // Cacher victoire
+        function hideVictory() {
+            document.getElementById('victory-modal').classList.remove('show');
         }
 
         // Niveau suivant
         function nextLevel() {
             document.getElementById('victory-modal').classList.remove('show');
-            game.level++;
-            loadLevel(game.level);
+            const nextLvl = game.level + 1;
+            if (nextLvl <= levels.length) {
+                loadLevel(nextLvl);
+            }
         }
 
         // Initialiser
