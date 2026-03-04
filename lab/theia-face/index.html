@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theia Face - Pixel Expression Matrix</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Courier New', monospace;
+            color: #fff;
+            padding: 20px;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+            color: #feca57;
+            text-shadow: 0 0 10px rgba(254, 202, 87, 0.5);
+        }
+
+        .subtitle {
+            margin-bottom: 20px;
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        .grid-container {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            box-shadow: 0 0 50px rgba(102, 126, 234, 0.2);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(16, 25px);
+            grid-template-rows: repeat(16, 25px);
+            gap: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .pixel {
+            width: 25px;
+            height: 25px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .pixel:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .pixel.active {
+            background: #6B46C1;
+            box-shadow: 0 0 10px rgba(107, 70, 193, 0.8);
+            border-color: #F59E0B;
+        }
+
+        .pixel.active.gold {
+            background: #F59E0B;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.8);
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 10px 20px;
+            color: white;
+            font-family: inherit;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .color-toggle {
+            background: linear-gradient(135deg, #6B46C1 0%, #F59E0B 100%);
+        }
+
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            font-size: 0.85rem;
+            color: #aaa;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .expressions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .expr-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            font-size: 0.8rem;
+        }
+
+        .expr-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <h1>🌟 THEIA FACE ⚙️</h1>
+    <p class="subtitle">Pixel Expression Matrix • 16×16 Grid</p>
+    
+    <div class="grid-container">
+        <div class="grid" id="pixelGrid"></div>
+    </div>
+
+    <div class="controls">
+        <button onclick="clearGrid()">🗑️ Effacer</button>
+        <button onclick="toggleColor()" class="color-toggle">🎨 Couleur</button>
+        <button onclick="invertGrid()">🔄 Inverser</button>
+        <button onclick="randomPattern()">🎲 Aléatoire</button>
+    </div>
+
+    <div class="expressions">
+        <button class="expr-btn" onclick="loadExpression('smile')">😊 Sourire</button>
+        <button class="expr-btn" onclick="loadExpression('heart')">❤️ Cœur</button>
+        <button class="expr-btn" onclick="loadExpression('star')">⭐ Étoile</button>
+        <button class="expr-btn" onclick="loadExpression('gear')">⚙️ Gear</button>
+    </div>
+
+    <div class="status" id="status">
+        Cliquez sur les pixels pour dessiner • Mode: <span id="colorMode">Violet</span> • <span id="pixelCount">0</span> pixels actifs
+    </div>
+
+    <script>
+        const grid = document.getElementById('pixelGrid');
+        const status = document.getElementById('status');
+        const colorModeSpan = document.getElementById('colorMode');
+        const pixelCountSpan = document.getElementById('pixelCount');
+        let isGold = false;
+        let pixels = [];
+
+        // Create grid
+        for (let i = 0; i < 256; i++) {
+            const pixel = document.createElement('div');
+            pixel.className = 'pixel';
+            pixel.dataset.index = i;
+            pixel.addEventListener('click', () => togglePixel(i));
+            grid.appendChild(pixel);
+            pixels.push(pixel);
+        }
+
+        function togglePixel(index) {
+            const pixel = pixels[index];
+            pixel.classList.toggle('active');
+            if (isGold) {
+                pixel.classList.toggle('gold');
+            }
+            updateStatus();
+        }
+
+        function toggleColor() {
+            isGold = !isGold;
+            colorModeSpan.textContent = isGold ? 'Or' : 'Violet';
+            colorModeSpan.style.color = isGold ? '#F59E0B' : '#6B46C1';
+        }
+
+        function clearGrid() {
+            pixels.forEach(p => {
+                p.classList.remove('active', 'gold');
+            });
+            updateStatus();
+        }
+
+        function invertGrid() {
+            pixels.forEach(p => {
+                if (p.classList.contains('active')) {
+                    p.classList.remove('active', 'gold');
+                } else {
+                    p.classList.add('active');
+                    if (isGold) p.classList.add('gold');
+                }
+            });
+            updateStatus();
+        }
+
+        function randomPattern() {
+            clearGrid();
+            pixels.forEach(p => {
+                if (Math.random() > 0.7) {
+                    p.classList.add('active');
+                    if (Math.random() > 0.5) p.classList.add('gold');
+                }
+            });
+            updateStatus();
+        }
+
+        function updateStatus() {
+            const count = pixels.filter(p => p.classList.contains('active')).length;
+            pixelCountSpan.textContent = count;
+        }
+
+        // Predefined expressions
+        const expressions = {
+            smile: [68, 69, 70, 83, 86, 99, 102, 115, 118, 131, 134, 147, 148, 149, 164, 165, 166, 167],
+            heart: [34, 35, 36, 37, 49, 50, 51, 52, 53, 54, 64, 65, 66, 67, 68, 69, 70, 71, 80, 81, 82, 83, 84, 85, 86, 87, 96, 97, 98, 99, 100, 101, 102, 103, 114, 115, 116, 117, 130, 131, 132, 147, 148, 149],
+            star: [119, 120, 121, 122, 123, 136, 137, 138, 139, 140, 141, 151, 152, 153, 154, 155, 156, 157, 158, 167, 168, 169, 170, 171, 172, 173, 174, 183, 184, 185, 186, 187, 200, 201, 202, 217],
+            gear: [85, 86, 101, 102, 117, 118, 133, 134, 68, 69, 70, 83, 84, 87, 88, 99, 100, 103, 104, 115, 116, 119, 120, 131, 132, 135, 136, 149, 150, 151, 165, 166, 167]
+        };
+
+        function loadExpression(name) {
+            clearGrid();
+            const indices = expressions[name];
+            if (indices) {
+                indices.forEach(i => {
+                    if (pixels[i]) {
+                        pixels[i].classList.add('active');
+                        if (name === 'star') pixels[i].classList.add('gold');
+                    }
+                });
+            }
+            updateStatus();
+        }
+
+        // Initial smile
+        loadExpression('smile');
+    </script>
+</body>
+</html>
