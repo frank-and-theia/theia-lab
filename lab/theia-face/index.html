@@ -142,7 +142,7 @@
 </head>
 <body>
     <h1>🌟 THEIA FACE ⚙️</h1>
-    <p class="subtitle">Pixel Expression Matrix • 16×16 Grid</p>
+    <p class="subtitle">Pixel Expression Matrix • 16×16 Grid • 7 Expressions</p>
     
     <div class="grid-container">
         <div class="grid" id="pixelGrid"></div>
@@ -160,6 +160,9 @@
         <button class="expr-btn" onclick="loadExpression('heart')">❤️ Cœur</button>
         <button class="expr-btn" onclick="loadExpression('star')">⭐ Étoile</button>
         <button class="expr-btn" onclick="loadExpression('gear')">⚙️ Gear</button>
+        <button class="expr-btn" onclick="loadExpression('crest')">🌞 Crest</button>
+        <button class="expr-btn" onclick="loadExpression('wave')">👋 Salut</button>
+        <button class="expr-btn" onclick="loadExpression('think')">🤔 Réflexion</button>
     </div>
 
     <div class="status" id="status">
@@ -235,51 +238,89 @@
         }
 
         // Predefined expressions - CORRECTED patterns for 16x16 grid
+        // All expressions are now centered and balanced
         const expressions = {
-            smile: [37, 38, 42, 43,  // Eyes top
-                    53, 54, 58, 59,  // Eyes bottom
-                    130, 131, 132, 133, 134, 135,  // Smile top
-                    147, 148, 149, 150, 151, 152,  // Smile middle
-                    163, 164, 165, 166],  // Smile bottom
-            heart: [38, 39, 42, 43,  // Top peaks
-                    52, 53, 54, 55, 56, 57, 58, 59,  // Upper curve
-                    67, 68, 69, 70, 71, 72, 73, 74,  // Middle upper
-                    83, 84, 85, 86, 87, 88, 89, 90,  // Middle
-                    99, 100, 101, 102, 103, 104,  // Lower middle
-                    116, 117, 118, 119, 120, 121,  // Lower
-                    133, 134, 135, 136, 137,  // Bottom curve
-                    150, 151, 152, 153,  // Point
-                    167, 168],  // Tip
-            star: [119,  // Top point
-                   101, 102, 103,  // Upper star
-                   83, 84, 85, 86, 87,  // Star arms upper
-                   68, 69, 70, 71, 72, 73,  // Star center upper
-                   52, 53, 54, 55, 56, 57, 58, 59,  // Star wide
-                   67, 68, 69, 70, 71, 72, 73, 74,  // Star center
-                   84, 85, 86, 87,  // Star middle
-                   100, 101, 102, 103,  // Star lower
-                   116, 117, 118, 119, 120,  // Bottom arms
-                   133, 134, 135,  // Lower point
-                   150,  // Bottom tip
-                   70, 71, 72,  // THEIA WAS HERE - Added purple! 💜
-                   86,
-                   102, 103, 104, 105,
-                   118, 119, 120, 121, 122,
-                   134, 135, 136, 137, 138],
-            gear: [85, 86, 89, 90,  // Center top
-                   101, 102, 105, 106,  // Upper teeth
-                   117, 118, 121, 122,  // Middle upper
-                   133, 134, 137, 138,  // Center
-                   149, 150, 153, 154,  // Lower teeth
-                   165, 166, 169, 170,  // Bottom
-                   84, 100, 116, 132, 148, 164,  // Left teeth
-                   87, 103, 119, 135, 151, 167,  // Right teeth
-                   69, 70, 71, 72,  // Top tooth
-                   197, 198, 199, 200,  // Bottom tooth
-                   37, 53, 69,  // Top-left diagonal
-                   42, 58, 74,  // Top-right diagonal
-                   181, 197, 213,  // Bottom-left
-                   186, 202, 218]  // Bottom-right
+            // 😊 Sourire centré - yeux au milieu, bouche harmonieuse
+            smile: [69, 70,  // Oeil gauche (ligne 4, cols 5-6)
+                    74, 75,  // Oeil droit (ligne 4, cols 10-11)
+                    133, 134, 135, 136, 137, 138,  // Bouche haut (ligne 8)
+                    148, 149, 150, 151, 152, 153,  // Bouche milieu (ligne 9)
+                    165, 166, 167, 168],  // Bouche bas (ligne 10)
+            
+            // ❤️ Cœur parfaitement symétrique
+            heart: [37, 38, 42, 43,  // Pointes haut
+                    52, 53, 54, 55, 56, 57, 58, 59,  // Courbe supérieure
+                    68, 69, 70, 71, 72, 73, 74, 75,  // Milieu haut
+                    84, 85, 86, 87, 88, 89, 90, 91,  // Centre
+                    100, 101, 102, 103, 104, 105,  // Milieu bas
+                    116, 117, 118, 119, 120, 121,  // Bas courbe
+                    133, 134, 135, 136, 137,  // Pointe
+                    150, 151, 152],  // Bout
+            
+            // ⭐ Étoile dorée - symétrique et brillante
+            star: [54, 55, 56, 57,  // Centre étoile
+                   38, 39, 40,  // Bras haut
+                   70, 71, 72, 73,  // Centre large
+                   22, 23,  // Pointe haute
+                   86, 87,  // Pointe basse
+                   53, 69, 85, 101,  // Bras gauche
+                   58, 74, 90, 106,  // Bras droit
+                   99, 100, 115, 116,  // Pointes latérales
+                   37, 42,  // Coins hauts
+                   117, 122],  // Coins bas
+            
+            // ⚙️ Gear mécanique - dentelé et centré
+            gear: [85, 86, 89, 90,  // Centre
+                   69, 70, 71, 72,  // Dent haut
+                   101, 102, 105, 106,  // Dents haut-milieu
+                   117, 118, 121, 122,  // Dents milieu
+                   133, 134, 137, 138,  // Centre bas
+                   149, 150, 153, 154,  // Dents bas-milieu
+                   165, 166, 169, 170,  // Dent bas
+                   84, 100, 116, 132, 148, 164,  // Dents gauches
+                   87, 103, 119, 135, 151, 167,  // Dents droites
+                   37, 42,  // Coins externes haut
+                   181, 186],  // Coins externes bas
+            
+            // 🌞 Crest Solus - Symbole solaire/forgeron doré
+            // Inspiration: Solus Prime, enclume solaire, 12 rayons
+            crest: [54, 55, 56, 57,  // Centre solaire
+                    22,  // Rayon haut (long)
+                    38, 54, 70,  // Rayon haut-gauche
+                    41, 57, 73,  // Rayon haut-droite
+                    86,  // Rayon droit
+                    41, 57, 73,  // Rayon bas-droite  
+                    102, 118,  // Rayon bas
+                    37, 53, 69,  // Rayon bas-gauche
+                    6,  // Rayon gauche (long)
+                    21, 37, 53,  // Rayon haut-gauche externe
+                    24, 40, 56,  // Rayon haut-droite externe
+                    88, 104, 120,  // Rayon bas-droite externe
+                    6, 22, 38, 54, 70, 86,  // Cercle externe
+                    55, 56, 71, 72],  // Cœur solaire (4 pixels dorés au centre)
+            
+            // 👋 Salut - vague amicale
+            wave: [21, 22, 23,  // Main haut
+                   37, 38, 39, 40,  // Doigts
+                   53, 54,  // Pouce
+                   69, 70, 71, 72, 73,  // Paume
+                   85, 86, 87, 88, 89,  // Poignet
+                   101, 102, 103, 104, 105,  // Bras
+                   69, 70,  // Oeil
+                   133, 134, 135,  // Sourire
+                   197, 198, 199],  // Main bas (vague)
+            
+            // 🤔 Réflexion - visage pensif avec point d'interrogation
+            think: [69, 70,  // Oeil gauche (fermé)
+                    74, 75,  // Oeil droit (ouvert)
+                    86, 87, 88,  // Nez
+                    101, 102, 103,  // Nez bas
+                    118, 119, 120,  // Bouche neutre
+                    36, 37,  // Sourcil pensif
+                    21, 22, 23, 24,  // Point d'interrogation haut
+                    38, 39, 40,  // Point d'interrogation milieu
+                    54, 55, 56,  // Point d'interrogation bas
+                    71]  // Point
         };
 
         function loadExpression(name) {
@@ -289,9 +330,18 @@
                 indices.forEach(i => {
                     if (pixels[i]) {
                         pixels[i].classList.add('active');
-                        if (name === 'star') pixels[i].classList.add('gold');
+                        // Expressions dorées par défaut
+                        if (name === 'star' || name === 'crest') {
+                            pixels[i].classList.add('gold');
+                        }
                     }
                 });
+            }
+            // Auto-set gold mode for golden expressions
+            if (name === 'crest') {
+                isGold = true;
+                colorModeSpan.textContent = 'Or';
+                colorModeSpan.style.color = '#F59E0B';
             }
             updateStatus();
         }
