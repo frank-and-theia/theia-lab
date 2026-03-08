@@ -2,6 +2,11 @@
 
 ## 🎨 Nouveautés
 
+### Mode Plein Écran
+- **Nouveau bouton** : ⛶ Plein Écran
+- **Fonction** : Active/désactive le mode plein écran pour utilisation comme écran dédié
+- **Usage** : Idéal pour affichage permanent sur Raspberry Pi ou écran secondaire
+
 ### Expressions améliorées (centrées et symétriques)
 1. **😊 Sourire** — Yeux parfaitement centrés, bouche harmonieuse
 2. **❤️ Cœur** — Symétrique et équilibré

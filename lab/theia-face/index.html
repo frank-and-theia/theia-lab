@@ -153,6 +153,7 @@
         <button onclick="toggleColor()" class="color-toggle">🎨 Couleur</button>
         <button onclick="invertGrid()">🔄 Inverser</button>
         <button onclick="randomPattern()">🎲 Aléatoire</button>
+        <button onclick="toggleFullscreen()">⛶ Plein Écran</button>
     </div>
 
     <div class="expressions">
@@ -166,7 +167,7 @@
     </div>
 
     <div class="status" id="status">
-        Cliquez sur les pixels pour dessiner • Mode: <span id="colorMode">Violet</span> • <span id="pixelCount">0</span> pixels actifs
+        Cliquez sur les pixels pour dessiner • Mode: <span id="colorMode">Violet</span> • <span id="pixelCount">0</span> pixels actifs • ⛶ pour plein écran
     </div>
 
     <script>
@@ -230,6 +231,16 @@
                 }
             });
             updateStatus();
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
         }
 
         function updateStatus() {
@@ -310,17 +321,13 @@
                    133, 134, 135,  // Sourire
                    197, 198, 199],  // Main bas (vague)
             
-            // 🤔 Réflexion - visage pensif avec point d'interrogation
-            think: [69, 70,  // Oeil gauche (fermé)
+            // 🤔 Réflexion - visage pensif simple (un œil fermé, un ouvert)
+            think: [69, 70,  // Oeil gauche (fermé en ligne)
                     74, 75,  // Oeil droit (ouvert)
-                    86, 87, 88,  // Nez
-                    101, 102, 103,  // Nez bas
+                    85, 86, 87, 88, 89,  // Nez horizontal
                     118, 119, 120,  // Bouche neutre
-                    36, 37,  // Sourcil pensif
-                    21, 22, 23, 24,  // Point d'interrogation haut
-                    38, 39, 40,  // Point d'interrogation milieu
-                    54, 55, 56,  // Point d'interrogation bas
-                    71]  // Point
+                    52, 53,  // Sourcil gauche (froncé)
+                    101, 117]  // Nez vertical
         };
 
         function loadExpression(name) {
